@@ -1,16 +1,17 @@
-name: Frontend CI
+name: Frontend CI/CD
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout code
@@ -27,5 +28,14 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build
+      - name: Build frontend
         run: npm run build
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./build          # Thư mục build của frontend
+          server-dir: /path/to/remote/frontend
