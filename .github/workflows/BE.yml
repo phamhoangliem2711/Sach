@@ -1,16 +1,17 @@
-name: Backend CI
+name: Backend CI/CD
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout code
@@ -22,8 +23,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build with Gradle
+      - name: Make Gradle Wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build project
         run: ./gradlew build
 
       - name: Run tests
         run: ./gradlew test
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: "build/libs/*"          # File build .jar
+          target: "/path/to/remote/backend"
